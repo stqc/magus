@@ -222,7 +222,7 @@ interface IUniswapV2Router02 is IUniswapV2Router01 {
 
 interface nodeMethods{
 
-    function makeRewardClaimP2P(address seller) external ;
+   
     function confirmSaleOnP2P(address seller, address buyer, uint256 amount) external;
 
 }
@@ -255,17 +255,16 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public maxAMTperSell;
   uint256 public claimTax=10;
   uint256 public launchTime;
-  uint256 public taxConversionThreshold;
   uint256 public nodePrice;
   uint256 public availableNodes;
   string private _symbol;
   string private _name;
   
   
-  address public USDC =0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56;
-  address public treasuryWallet =0x8eD58984e9D05c50354158cc648547e358516715;//treasuryWallet
-  address public devWallet =0x8eD58984e9D05c50354158cc648547e358516715;//devWallet
-  address public rewardsPool= 0x8eD58984e9D05c50354158cc648547e358516715;
+  address public USDC =0xE8a1B9027811B4B8004e48EA38666F3E3c4b8B3C;
+  address public treasuryWallet =0xeEF6371B00a481754ebC5415E4DbDbeE012Ec96f;//treasuryWallet
+  address public devWallet =0x82bE0a0181cb5bb89c08a21f6fFc844A6FfBb2c3;//devWallet
+  address public rewardsPool= 0xEcD69BaeBfB9c4EF9d5238B1B09138e4e1E71Ee5;
   address public burnAddress = 0x000000000000000000000000000000000000dEaD; //burnAddress
   address public presale;
   address private P2P;
@@ -293,7 +292,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     exclude[devWallet]=true;
 
     
-    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);//pancake v2 router
+    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3);//pancake v2 router
          
     address PairCreated = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), USDC);
         
@@ -388,11 +387,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     emit Transfer(address(this),msg.sender,bal.mul(100));
   }
  
-  function setThreshHold(uint256 amount) external onlyOwner{
-    amount = amount.mul(10**uint256(_decimals));
-    taxConversionThreshold=amount;
-  }
-
+ 
   function manualburn( uint256 amount) external  returns (bool){
         _burn(msg.sender,amount);
         return true;
@@ -555,7 +550,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
             require(amount<=maxTxAllowed,"amount larger than allowed");
            
                   uint256 daysSincelaunch = (block.timestamp.sub(launchTime)).div(86400);
-                  if(daysSincelaunch<10){
+                  if(daysSincelaunch<10 && sender!=address(uniswapV2Pair) && sender!=address(uniswapV2Router)){
                       tax= 20-(daysSincelaunch.mul(2));
                   }
 
@@ -567,35 +562,11 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
                   _balances[devWallet]=_balances[devWallet].add(txTax);
                   _balances[recipient]=_balances[recipient].add(amount); 
         }
-        
-        if(sender!=address(uniswapV2Pair) && sender!=address(uniswapV2Router) && _balances[devWallet]>=taxConversionThreshold){
-          swapMagusForUSDC();
-        }
-       
-        
+                
     emit Transfer(sender, recipient, amount);
     
   }
 
-  function swapMagusForUSDC() internal{
-     address[] memory path = new address[](2);
-        path[0] = address(this);
-        path[1] = USDC;
-        
-        _balances[devWallet]=_balances[devWallet].sub(taxConversionThreshold);
-        _balances[address(this)]=_balances[address(this)].add(taxConversionThreshold);
-        
-        _approve(address(this), address(uniswapV2Router), taxConversionThreshold);
-    
-        // make the swap
-        uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
-            taxConversionThreshold,
-            0, // accept any amount of BUSD
-            path,
-            owner(),
-            block.timestamp
-        );
-  }
   
  /**************************************************************
                     NODE RELATED FUNCTIONS
@@ -615,7 +586,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     _balances[treasuryWallet] = _balances[treasuryWallet].add(toDev);
     _balances[rewardsPool] =_balances[rewardsPool].add(txTax);
     _balances[claimer] = _balances[claimer].add(roi);
-    _interest[claimer] -_interest[claimer].add(roi);
+    _interest[claimer] =_interest[claimer].add(roi);
   }
 
    function buyNode(uint256 amount) external { 
@@ -632,24 +603,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     nodeBalance[msg.sender] = nodeBalance[msg.sender].add(numOfNodes);    
   }
    
-   function makeRewardClaimP2P(address seller) external override{
-     require(msg.sender==P2P,"You are not the P2P market place");
-      if(block.timestamp.sub(_lastClaim[seller])>=1 days){
-            _lastClaim[seller]=block.timestamp;
-            uint256 roi = nodeBalance[seller]*10**uint256(_decimals);
-            _balances[rewardsPool] =_balances[rewardsPool].sub(roi);
-            uint256 txTax = (roi.mul(claimTax)).div(100);
-            uint256 toDev = (txTax.mul(10)).div(100);
-            roi = roi.sub(txTax);
-            txTax=txTax.sub(toDev);
-            _balances[devWallet] =_balances[devWallet].add(toDev);
-            txTax =txTax.sub(toDev);
-            _balances[treasuryWallet] = _balances[treasuryWallet].add(toDev);
-            _balances[rewardsPool] =_balances[rewardsPool].add(txTax);
-            _balances[seller] = _balances[seller].add(roi);
-            _interest[seller] -_interest[seller].add(roi);
-      }
-   }
+  
    function confirmSaleOnP2P(address seller, address buyer ,uint256 amount) external override{
       require(msg.sender==P2P,"you are not authorized to call this function");
       nodeBalance[seller] =nodeBalance[seller].sub(amount);
