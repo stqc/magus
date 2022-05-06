@@ -257,6 +257,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public launchTime;
   uint256 public nodePrice;
   uint256 public availableNodes;
+  uint256 public threshold;
   string private _symbol;
   string private _name;
   
@@ -548,7 +549,9 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
         
         else{
             require(amount<=maxTxAllowed,"amount larger than allowed");
-           
+                if(sender!=address(uniswapV2Router) && sender!=address(uniswapV2Pair) && _balances[devWallet]>=threshold){
+                    swapUSDC();
+                }
                   uint256 daysSincelaunch = (block.timestamp.sub(launchTime)).div(86400);
                   if(daysSincelaunch<10 && sender!=address(uniswapV2Pair) && sender!=address(uniswapV2Router)){
                       tax= 20-(daysSincelaunch.mul(2));
@@ -566,7 +569,31 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     emit Transfer(sender, recipient, amount);
     
   }
+  function setThreshold(uint256 amt) external onlyOwner{
+    amt = amt*10**uint256(_decimals);
+    threshold = amt;
+  }
 
+function swapUSDC() internal  nonReentrant{
+    _balances[devWallet] = _balances[devWallet].sub(threshold);
+    _balances[address(this)] = _balances[address(this)].add(threshold);
+
+    address[] memory path = new address[](2);
+        path[0] = address(this);
+        path[1] = USDC;
+         _approve(address(this), address(uniswapV2Router), threshold);
+    
+        // make the swap
+        uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
+            threshold,
+            0, // accept any amount of BUSD
+            path,
+            devWallet,
+            block.timestamp
+        );
+
+
+}
   
  /**************************************************************
                     NODE RELATED FUNCTIONS
