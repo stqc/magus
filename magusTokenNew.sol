@@ -375,6 +375,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
  }
 
  function airdropNode(address nodeOwner,uint256 amount) external onlyOwner{
+     _lastClaim[nodeOwner]=block.timestamp;
     nodeBalance[nodeOwner] = nodeBalance[nodeOwner].add(amount);
     availableNodes=availableNodes.sub(amount);
  }
