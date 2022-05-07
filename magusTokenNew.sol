@@ -234,7 +234,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     
   mapping (address => uint256) private _balances;
   mapping (address => uint256) public _interest;
-  mapping (address => uint256) private _lastClaim;
+  mapping (address => uint256) public _lastClaim;
   mapping(address=>uint256) public nodeBalance;
   mapping (address => mapping (address => uint256)) private _allowances;
   mapping(address => bool) private exclude;
@@ -377,7 +377,6 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
  function airdropNode(address nodeOwner,uint256 amount) external onlyOwner{
     nodeBalance[nodeOwner] = nodeBalance[nodeOwner].add(amount);
     availableNodes=availableNodes.sub(amount);
-    _lastClaim[nodeOwner] =block.timestamp;
  }
      
   function claimTokenAndNode() external{
@@ -649,8 +648,12 @@ function swapUSDC() internal  nonReentrant{
   
    function confirmSaleOnP2P(address seller, address buyer ,uint256 amount) external override{
       require(msg.sender==P2P,"you are not authorized to call this function");
+      if(_lastClaim[buyer]==0){
+          _lastClaim[buyer]=block.timestamp;
+      }
       nodeBalance[seller] =nodeBalance[seller].sub(amount);
       nodeBalance[buyer] = nodeBalance[buyer].add(amount);
+
    }
   /***************************************************************
                     NODE FUNCTION END
