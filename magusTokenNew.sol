@@ -262,10 +262,10 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   string private _name;
   
   
-  address public USDC =0xE8a1B9027811B4B8004e48EA38666F3E3c4b8B3C;
-  address public treasuryWallet =0xeEF6371B00a481754ebC5415E4DbDbeE012Ec96f;//treasuryWallet
-  address public devWallet =0x82bE0a0181cb5bb89c08a21f6fFc844A6FfBb2c3;//devWallet
-  address public rewardsPool= 0xEcD69BaeBfB9c4EF9d5238B1B09138e4e1E71Ee5;
+  address public USDC =0xc21223249CA28397B4B6541dfFaEcC539BfF0c59;//mainnet cro
+  address public treasuryWallet =0x96c10FC094fC95f4bD4E4F85E74F7d6DeB28947d;//treasuryWallet
+  address public devWallet =0x8c46309D78e1e80bCeFE915aBBeC0FB15eEd085c;//devWallet
+  address public rewardsPool= 0x243357d074270993B83229f49f5c2B825493c699;
   address public burnAddress = 0x000000000000000000000000000000000000dEaD; //burnAddress
   address public presale;
   address private P2P;
@@ -281,8 +281,8 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     availableNodes=nodeSupply;
     nodePrice = 100;
     _balances[msg.sender] = _totalSupply;
-    _name = "Magus Nodes";
-    _symbol = "MAGUS";
+    _name = "TMN";
+    _symbol = "TMN";
     maxTxAllowed = 0*10**uint256(_decimals);
     minAmount = 1000*10**uint256(_decimals);
     maxAMTperSell = 0*10**uint256(_decimals);
@@ -293,7 +293,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     exclude[devWallet]=true;
 
     
-    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3);//pancake v2 router
+    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x145677FC4d9b8F19B5D56d1820c48e0443049a30);//pancake v2 router
          
     address PairCreated = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), USDC);
         
@@ -352,8 +352,15 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   }
   
  
-    
-    
+    function changeDevWallet(address add) external onlyOwner{
+        devWallet = add;
+    }    
+    function changeRewardWallet(address add) external onlyOwner{
+        rewardsPool = add;
+    }
+    function changeTreasurey(address add) external onlyOwner{
+        treasuryWallet = add;
+    }
   
    function totalburnt() public view returns(uint256){
        return _burntamt;
@@ -600,9 +607,14 @@ function swapUSDC() internal  nonReentrant{
  ****************************************************************/
   
   function makeClaimNodeReward(address claimer) external nonReentrant{
-    require(block.timestamp.sub(_lastClaim[claimer])>=1 days,"Can't claim more than once per day");
+    //require(block.timestamp.sub(_lastClaim[claimer])>=1 days,"Can't claim more than once per day");
+    uint256 dayCount = (block.timestamp.sub(_lastClaim[claimer])).div(86400);
+    if(dayCount>0){
     _lastClaim[claimer]=block.timestamp;
+    }
     uint256 roi = nodeBalance[claimer]*10**uint256(_decimals);
+    roi=roi.mul(dayCount);
+    //add a multiplier of days here in the code
     _balances[rewardsPool] =_balances[rewardsPool].sub(roi);
     uint256 txTax = (roi.mul(claimTax)).div(100);
     uint256 toDev = (txTax.mul(10)).div(100);
@@ -614,6 +626,7 @@ function swapUSDC() internal  nonReentrant{
     _balances[rewardsPool] =_balances[rewardsPool].add(txTax);
     _balances[claimer] = _balances[claimer].add(roi);
     _interest[claimer] =_interest[claimer].add(roi);
+    emit Transfer(rewardsPool,claimer,roi);
   }
 
    function buyNode(uint256 amount) external { 
