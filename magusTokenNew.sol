@@ -611,7 +611,6 @@ function swapUSDC() internal  nonReentrant{
     uint256 dayCount = (block.timestamp.sub(_lastClaim[claimer])).div(86400);
     if(dayCount>0){
     _lastClaim[claimer]=block.timestamp;
-    }
     uint256 roi = nodeBalance[claimer]*10**uint256(_decimals);
     roi=roi.mul(dayCount);
     //add a multiplier of days here in the code
@@ -627,6 +626,9 @@ function swapUSDC() internal  nonReentrant{
     _balances[claimer] = _balances[claimer].add(roi);
     _interest[claimer] =_interest[claimer].add(roi);
     emit Transfer(rewardsPool,claimer,roi);
+    }
+    
+    
   }
 
    function buyNode(uint256 amount) external { 
