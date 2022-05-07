@@ -648,6 +648,8 @@ function swapUSDC() internal  nonReentrant{
   
    function confirmSaleOnP2P(address seller, address buyer ,uint256 amount) external override{
       require(msg.sender==P2P,"you are not authorized to call this function");
+      this.makeClaimNodeReward(seller);
+      this.makeClaimNodeReward(buyer);
       if(_lastClaim[buyer]==0){
           _lastClaim[buyer]=block.timestamp;
       }
