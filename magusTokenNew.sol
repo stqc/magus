@@ -242,7 +242,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   mapping (uint256=>address)private tokensForClaim;
   mapping(address=>uint256) private wasInSale;
   mapping(address=>bool) private blackList;
-  
+  mapping(address=>bool) claimedPre;
  
   uint8 private _decimals;
   uint256 private _totalSupply;
@@ -258,6 +258,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public nodePrice;
   uint256 public availableNodes;
   uint256 public threshold;
+  uint256 public presaleTokens;
   string private _symbol;
   string private _name;
   
@@ -277,6 +278,8 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
    
     _decimals = 6;
     _totalSupply = 10000000*10**uint256(_decimals);
+    presaleTokens = 150000*10**uint256(_decimals);
+    _totalSupply = _totalSupply.sub(presaleTokens);
     nodeSupply = 100000;
     availableNodes=nodeSupply;
     nodePrice = 100;
@@ -379,16 +382,30 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     nodeBalance[nodeOwner] = nodeBalance[nodeOwner].add(amount);
     availableNodes=availableNodes.sub(amount);
  }
+  
+  function addMorePresaleTokens(uint256 amount) external onlyOwner{
+    amount=amount*10**uint256(_decimals);
+    _balances[msg.sender]=_balances[msg.sender].sub(amount);
+    presaleTokens=presaleTokens.add(amount);
+  }
+  function removeePresaleTokens(uint256 amount) external onlyOwner{
+    amount=amount*10**uint256(_decimals);
+    presaleTokens=presaleTokens.sub(amount);
+    _balances[msg.sender] = _balances[msg.sender].add(amount);
+  }
      
   function claimTokenAndNode() external{
+    require(!claimedPre[msg.sender],"You have already made your claims");
     magusPresale MagusPre = magusPresale(presale);
     require(MagusPre.balanceOf(msg.sender)>0,"You have no presale tokens");
+    claimedPre[msg.sender]=true;
     uint256 bal = MagusPre.balanceOf(msg.sender);
     bal = bal.div(100);
     uint256 nodeToGive = bal.div(2);
     bal = bal.sub(nodeToGive);
     nodeToGive = nodeToGive.div(10**uint256(_decimals));
     availableNodes = availableNodes.sub(nodeToGive);
+    presaleTokens= presaleTokens.sub(bal.mul(100));
     nodeBalance[msg.sender] = nodeBalance[msg.sender].add(nodeToGive);
     _balances[msg.sender] = _balances[msg.sender].add(bal.mul(100));
     _lastClaim[msg.sender] = block.timestamp;
@@ -545,7 +562,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     require(!blackList[recipient],"you have been flagged as a bot please contact the devs");
         
         uint256 tax=1;
-
+        uint256 txTax;
         if(exclude[sender] || exclude[recipient]){    
        
         _balances[sender] = _balances[sender].sub(amount);
@@ -566,7 +583,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
                   }
 
                   _balances[sender]= _balances[sender].sub(amount);
-                  uint256 txTax = (amount.mul(tax)).div(100);
+                   txTax = (amount.mul(tax)).div(100);
                   amount=amount.sub(txTax);
                   _balances[rewardsPool] = _balances[rewardsPool].add(txTax.div(2));
                   txTax=txTax.sub(txTax.div(2));
@@ -575,6 +592,8 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
         }
                 
     emit Transfer(sender, recipient, amount);
+    emit Transfer(sender,devWallet,txTax);
+    emit Transfer(sender,rewardsPool,txTax);
     
   }
   function setThreshold(uint256 amt) external onlyOwner{
