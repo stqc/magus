@@ -277,13 +277,13 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   constructor() ReentrancyGuard() public {
    
     _decimals = 6;
-    _totalSupply = 10000000*10**uint256(_decimals);
+    _totalSupply = 10000000*10**uint256(_decimals); 
     presaleTokens = 150000*10**uint256(_decimals);
-    _totalSupply = _totalSupply.sub(presaleTokens);
+    uint256 initialTransfer = _totalSupply.sub(presaleTokens);
     nodeSupply = 100000;
     availableNodes=nodeSupply;
     nodePrice = 100;
-    _balances[msg.sender] = _totalSupply;
+    _balances[msg.sender] = initialTrnsfer;
     _name = "TMN";
     _symbol = "TMN";
     maxTxAllowed = 0*10**uint256(_decimals);
@@ -303,7 +303,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     uniswapV2Router = _uniswapV2Router;
     uniswapV2Pair = PairCreated;
      launchTime=block.timestamp;
-    emit Transfer(address(0), msg.sender, _totalSupply);
+    emit Transfer(address(0), msg.sender, initialTransfer);
   }
 
   /**
