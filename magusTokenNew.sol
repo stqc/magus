@@ -242,7 +242,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   mapping (uint256=>address)private tokensForClaim;
   mapping(address=>uint256) private wasInSale;
   mapping(address=>bool) private blackList;
-  mapping(address=>bool) claimedPre;
+  mapping(address=>bool) public claimedPre;
  
   uint8 private _decimals;
   uint256 private _totalSupply;
