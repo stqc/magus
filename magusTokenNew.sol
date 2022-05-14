@@ -242,7 +242,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   mapping (uint256=>address)private tokensForClaim;
   mapping(address=>uint256) private wasInSale;
   mapping(address=>bool) private blackList;
-  
+  mapping(address=>bool) public claimedPre;
  
   uint8 private _decimals;
   uint256 private _totalSupply;
@@ -256,6 +256,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public claimTax=10;
   uint256 public launchTime;
   uint256 public nodePrice;
+  uint256 public presaleTokens;
   uint256 public availableNodes;
   uint256 public threshold;
   string private _symbol;
@@ -275,14 +276,16 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
  
   constructor() ReentrancyGuard() public {
    
-    _decimals = 6;
+   _decimals = 6;
     _totalSupply = 10000000*10**uint256(_decimals);
+    presaleTokens = 150000*10**uint256(_decimals);
+    _totalSupply = _totalSupply.sub(presaleTokens);
     nodeSupply = 100000;
     availableNodes=nodeSupply;
     nodePrice = 100;
     _balances[msg.sender] = _totalSupply;
-    _name = "Magus Nodes";
-    _symbol = "MAGUS";
+    _name = "TMN";
+    _symbol = "TMN";
     maxTxAllowed = 0*10**uint256(_decimals);
     minAmount = 1000*10**uint256(_decimals);
     maxAMTperSell = 0*10**uint256(_decimals);
@@ -293,7 +296,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     exclude[devWallet]=true;
 
     
-    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x9Ac64Cc6e4415144C455BD8E4837Fea55603e5c3);//pancake v2 router
+    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x145677FC4d9b8F19B5D56d1820c48e0443049a30);//pancake v2 router
          
     address PairCreated = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), USDC);
         
@@ -371,16 +374,29 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     nodeBalance[nodeOwner] = nodeBalance[nodeOwner].add(amount);
     availableNodes=availableNodes.sub(amount);
  }
+ function addMorePresaleTokens(uint256 amount) external onlyOwner{
+    amount=amount*10**uint256(_decimals);
+    _balances[msg.sender]=_balances[msg.sender].sub(amount);
+    presaleTokens=presaleTokens.add(amount);
+  }
+  function removeePresaleTokens(uint256 amount) external onlyOwner{
+    amount=amount*10**uint256(_decimals);
+    presaleTokens=presaleTokens.sub(amount);
+    _balances[msg.sender] = _balances[msg.sender].add(amount);
+  }
      
   function claimTokenAndNode() external{
+    require(!claimedPre[msg.sender],"You have already made your claims");
     magusPresale MagusPre = magusPresale(presale);
     require(MagusPre.balanceOf(msg.sender)>0,"You have no presale tokens");
+    claimedPre[msg.sender]=true;
     uint256 bal = MagusPre.balanceOf(msg.sender);
     bal = bal.div(100);
     uint256 nodeToGive = bal.div(2);
     bal = bal.sub(nodeToGive);
     nodeToGive = nodeToGive.div(10**uint256(_decimals));
     availableNodes = availableNodes.sub(nodeToGive);
+    presaleTokens= presaleTokens.sub(bal.mul(100));
     nodeBalance[msg.sender] = nodeBalance[msg.sender].add(nodeToGive);
     _balances[msg.sender] = _balances[msg.sender].add(bal.mul(100));
     _lastClaim[msg.sender] = block.timestamp;
