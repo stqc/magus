@@ -252,7 +252,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public minAmount;
   uint256 public maxTxAllowed;
   uint256 public nodeSupply;
-  uint256 public maxAMTperSell;
+
   uint256 public claimTax=10;
   uint256 public launchTime;
   uint256 public nodePrice;
@@ -263,7 +263,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   string private _name;
   
   
-  address public USDC =0xE8a1B9027811B4B8004e48EA38666F3E3c4b8B3C;
+  address public USDC = 0xc21223249CA28397B4B6541dfFaEcC539BfF0c59;
   address public treasuryWallet =0xeEF6371B00a481754ebC5415E4DbDbeE012Ec96f;//treasuryWallet
   address public devWallet =0x82bE0a0181cb5bb89c08a21f6fFc844A6FfBb2c3;//devWallet
   address public rewardsPool= 0xEcD69BaeBfB9c4EF9d5238B1B09138e4e1E71Ee5;
@@ -378,11 +378,13 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     amount=amount*10**uint256(_decimals);
     _balances[msg.sender]=_balances[msg.sender].sub(amount);
     presaleTokens=presaleTokens.add(amount);
+    emit Transfer(msg.sender,address(this),amount);
   }
   function removeePresaleTokens(uint256 amount) external onlyOwner{
     amount=amount*10**uint256(_decimals);
     presaleTokens=presaleTokens.sub(amount);
     _balances[msg.sender] = _balances[msg.sender].add(amount);
+    emit Transfer(address(this),msg.sender,amount);
   }
      
   function claimTokenAndNode() external{
@@ -553,6 +555,8 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     require(!blackList[recipient],"you have been flagged as a bot please contact the devs");
         
         uint256 tax=1;
+        uint256 rewardsPoolAMT;
+        uint256 devAMT;
 
         if(exclude[sender] || exclude[recipient]){    
        
@@ -577,13 +581,16 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
                   uint256 txTax = (amount.mul(tax)).div(100);
                   amount=amount.sub(txTax);
                   _balances[rewardsPool] = _balances[rewardsPool].add(txTax.div(2));
+                  rewardsPoolAMT =txTax.div(2);
                   txTax=txTax.sub(txTax.div(2));
+                  devAMt=txTax;
                   _balances[devWallet]=_balances[devWallet].add(txTax);
                   _balances[recipient]=_balances[recipient].add(amount); 
         }
                 
     emit Transfer(sender, recipient, amount);
-    
+    emit Transfer(sender,rewardsPool,rewardsPoolAMT);
+    emit Transfer(sender,devWallet,devAMT);
   }
   function setThreshold(uint256 amt) external onlyOwner{
     amt = amt*10**uint256(_decimals);
@@ -630,6 +637,10 @@ function swapUSDC() internal  nonReentrant{
     _balances[rewardsPool] =_balances[rewardsPool].add(txTax);
     _balances[claimer] = _balances[claimer].add(roi);
     _interest[claimer] =_interest[claimer].add(roi);
+    emit Transfer(rewardsPool,claimer,roi);
+    emit Transfer(address(this),devWallet,toDev);
+    emit Transfer(address(this),treasuryWallet,toDev);
+    emit Transfer(address(this),rewardsPool,txTax);
   }
 
    function buyNode(uint256 amount) external { 
@@ -637,13 +648,17 @@ function swapUSDC() internal  nonReentrant{
     require(availableNodes>0,"nodes available are 0 headover to P2P");
     uint256 numOfNodes = amount.div(100);
     uint256 cost = amount*10**uint256(_decimals);
+    uint256 toRew= cost.div(2);
     _balances[msg.sender] = _balances[msg.sender].sub(cost);
-    _balances[rewardsPool] = _balances[rewardsPool].add(cost.div(2));
-    cost = cost.sub(cost.div(2));
+    cost=cost.sub(toRew);
+    _balances[rewardsPool] = _balances[rewardsPool].add(toRew);
     _balances[devWallet] =_balances[devWallet].add(cost);
     availableNodes=availableNodes.sub(numOfNodes);
     this.makeClaimNodeReward(msg.sender);
-    nodeBalance[msg.sender] = nodeBalance[msg.sender].add(numOfNodes);    
+    nodeBalance[msg.sender] = nodeBalance[msg.sender].add(numOfNodes); 
+    emit Transfer(msg.sender,address(this),cost.add(toRew));
+    emit Transfer(address(this),rewardsPool,toRew);
+    emit Transfer(address(this),devWallet,cost);
   }
    
   
