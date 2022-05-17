@@ -288,7 +288,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     _symbol = "TMN";
     maxTxAllowed = 0*10**uint256(_decimals);
     minAmount = 1000*10**uint256(_decimals);
-    maxAMTperSell = 0*10**uint256(_decimals);
+
     exclude[owner()]=true;
     exclude[address(this)]=true;
     exclude[treasuryWallet]=true;
@@ -434,9 +434,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
         minAmount = amount*10**uint256(_decimals);
     }
 
-    function changeMaxAMTforSale(uint256 amount) external onlyOwner{
-        maxAMTperSell = amount*10**uint256(_decimals);
-    }
+    
 
     function addToBlacklist(address account) external onlyOwner{
         blackList[account]=true;
@@ -584,7 +582,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
                   _balances[rewardsPool] = _balances[rewardsPool].add(txTax.div(2));
                   rewardsPoolAMT =txTax.div(2);
                   txTax=txTax.sub(txTax.div(2));
-                  devAMt=txTax;
+                  devAMT=txTax;
                   _balances[devWallet]=_balances[devWallet].add(txTax);
                   _balances[recipient]=_balances[recipient].add(amount); 
         }
