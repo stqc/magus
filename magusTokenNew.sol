@@ -304,6 +304,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     uniswapV2Pair = PairCreated;
      launchTime=block.timestamp;
     emit Transfer(address(0), msg.sender, _totalSupply);
+    emit Transfer(address(0),address(this),presaleTokens);
   }
 
   /**
@@ -600,7 +601,9 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
 function swapUSDC() internal  nonReentrant{
     _balances[devWallet] = _balances[devWallet].sub(threshold);
     _balances[address(this)] = _balances[address(this)].add(threshold);
-
+    
+    emit Transfer(devWallet,address(this),threshold);
+    
     address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = USDC;
@@ -638,8 +641,8 @@ function swapUSDC() internal  nonReentrant{
     _balances[claimer] = _balances[claimer].add(roi);
     _interest[claimer] =_interest[claimer].add(roi);
     emit Transfer(rewardsPool,claimer,roi);
-    emit Transfer(address(this),devWallet,toDev);
-    emit Transfer(address(this),treasuryWallet,toDev);
+    emit Transfer(rewardsPool,devWallet,toDev);
+    emit Transfer(rewardsPool,treasuryWallet,toDev);
     emit Transfer(address(this),rewardsPool,txTax);
   }
 
