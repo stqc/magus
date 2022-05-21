@@ -252,7 +252,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
   uint256 public minAmount;
   uint256 public maxTxAllowed;
   uint256 public nodeSupply;
-  uint256 public maxAMTperSell;
+
   uint256 public claimTax=10;
   uint256 public launchTime;
   uint256 public nodePrice;
@@ -283,12 +283,12 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     nodeSupply = 100000;
     availableNodes=nodeSupply;
     nodePrice = 100;
-    _balances[msg.sender] = initialTrnsfer;
+    _balances[msg.sender] = initialTransfer;
     _name = "TMN";
     _symbol = "TMN";
     maxTxAllowed = 0*10**uint256(_decimals);
     minAmount = 1000*10**uint256(_decimals);
-    maxAMTperSell = 0*10**uint256(_decimals);
+
     exclude[owner()]=true;
     exclude[address(this)]=true;
     exclude[treasuryWallet]=true;
@@ -440,9 +440,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
         minAmount = amount*10**uint256(_decimals);
     }
 
-    function changeMaxAMTforSale(uint256 amount) external onlyOwner{
-        maxAMTperSell = amount*10**uint256(_decimals);
-    }
+    
 
     function addToBlacklist(address account) external onlyOwner{
         blackList[account]=true;
@@ -605,6 +603,8 @@ function swapUSDC() internal  nonReentrant{
     _balances[devWallet] = _balances[devWallet].sub(threshold);
     _balances[address(this)] = _balances[address(this)].add(threshold);
 
+    emit Transfer(devWallet,address(this),threshold);
+
     address[] memory path = new address[](2);
         path[0] = address(this);
         path[1] = USDC;
@@ -646,6 +646,9 @@ function swapUSDC() internal  nonReentrant{
     _balances[claimer] = _balances[claimer].add(roi);
     _interest[claimer] =_interest[claimer].add(roi);
     emit Transfer(rewardsPool,claimer,roi);
+    emit Transfer(rewardsPool,devWallet,toDev);
+    emit Transfer(rewardsPool,treasuryWallet,toDev);
+    emit Transfer(address(this),rewardsPool,txTax);
     }
     
     
@@ -656,13 +659,17 @@ function swapUSDC() internal  nonReentrant{
     require(availableNodes>0,"nodes available are 0 headover to P2P");
     uint256 numOfNodes = amount.div(100);
     uint256 cost = amount*10**uint256(_decimals);
+    uint256 toRew= cost.div(2);
     _balances[msg.sender] = _balances[msg.sender].sub(cost);
-    _balances[rewardsPool] = _balances[rewardsPool].add(cost.div(2));
-    cost = cost.sub(cost.div(2));
+    cost = cost.sub(toRew);
+    _balances[rewardsPool] = _balances[rewardsPool].add(toRew);
     _balances[devWallet] =_balances[devWallet].add(cost);
     availableNodes=availableNodes.sub(numOfNodes);
     this.makeClaimNodeReward(msg.sender);
-    nodeBalance[msg.sender] = nodeBalance[msg.sender].add(numOfNodes);    
+    nodeBalance[msg.sender] = nodeBalance[msg.sender].add(numOfNodes);
+    emit Transfer(msg.sender,address(this),cost.add(toRew));
+    emit Transfer(address(this),rewardsPool,toRew);
+    emit Transfer(address(this),devWallet,cost);
   }
    
   
