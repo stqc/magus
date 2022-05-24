@@ -284,8 +284,8 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     availableNodes=nodeSupply;
     nodePrice = 100;
     _balances[msg.sender] = initialTransfer;
-    _name = "TMN";
-    _symbol = "TMN";
+    _name = "Magus Nodes";
+    _symbol = "MAGUS";
     maxTxAllowed = 0*10**uint256(_decimals);
     minAmount = 1000*10**uint256(_decimals);
 
@@ -296,7 +296,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     exclude[devWallet]=true;
 
     
-    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0x145677FC4d9b8F19B5D56d1820c48e0443049a30);//pancake v2 router
+    IUniswapV2Router02 _uniswapV2Router = IUniswapV2Router02(0xF8de99b34175bC66d12129Ec6345F4d875d2f049);//pancake v2 router
          
     address PairCreated = IUniswapV2Factory(_uniswapV2Router.factory()).createPair(address(this), USDC);
         
@@ -304,6 +304,7 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     uniswapV2Pair = PairCreated;
      launchTime=block.timestamp;
     emit Transfer(address(0), msg.sender, initialTransfer);
+    emit Transfer(address(0),address(this),presaleTokens);
   }
 
   /**
@@ -387,11 +388,13 @@ contract magus is Context, IBEP20, Ownable, ReentrancyGuard, nodeMethods {
     amount=amount*10**uint256(_decimals);
     _balances[msg.sender]=_balances[msg.sender].sub(amount);
     presaleTokens=presaleTokens.add(amount);
+    emit Transfer(msg.sender,address(this),amount);
   }
   function removeePresaleTokens(uint256 amount) external onlyOwner{
     amount=amount*10**uint256(_decimals);
     presaleTokens=presaleTokens.sub(amount);
     _balances[msg.sender] = _balances[msg.sender].add(amount);
+    emit Transfer(address(this),msg.sender,amount);
   }
      
   function claimTokenAndNode() external{
@@ -613,7 +616,7 @@ function swapUSDC() internal  nonReentrant{
         // make the swap
         uniswapV2Router.swapExactTokensForTokensSupportingFeeOnTransferTokens(
             threshold,
-            0, // accept any amount of BUSD
+            0, // accept any amount of USDC
             path,
             devWallet,
             block.timestamp
