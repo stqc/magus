@@ -192,5 +192,6 @@ contract magusNodePeerExchange {
         Magus.confirmSaleOnP2P(seller,msg.sender,orders[seller].nodeAmount);
         orders[seller].orderPlaced=false;
 
+        emit orderCompleted(orders[seller].nodeAmount,seller,msg.sender);
     }
 }
