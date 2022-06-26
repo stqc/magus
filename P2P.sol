@@ -1,5 +1,6 @@
 pragma solidity >=0.8.0;
-
+//code by STQC aka JDbomb
+// This code can be used in other projects with proper citations to my github https://github.com/stqc
 // SPDX-License-Identifier: No License
 
 
@@ -143,7 +144,15 @@ contract magusNodePeerExchange {
         
         BigDaddy = msg.sender;
         MagusAddress = 0xA57ca211cd6820bd3d930978271538d07e31A212;
-        orderPlacers.push(address(0));
+    }
+
+    function viewAllOrders() external view returns(address[] memory,orderData[] memory){
+
+        orderData[] memory orderInfo = new orderData[](orderPlacers.length);
+        for(uint i=0; i< orderPlacers.length; i++){
+            orderInfo[i]=orders[orderPlacers[i]];
+        }
+        return (orderPlacers,orderInfo);
 
     }
 
@@ -172,7 +181,7 @@ contract magusNodePeerExchange {
     function cancelAnOrder() external{
         require(orders[msg.sender].orderPlaced,"You have no orders placed yet");
         orderPlacers[addressToIndex[msg.sender]]=orderPlacers[orderPlacers.length-1];
-        delete orderPlacers[orderPlacers.length-1];
+        orderPlacers.pop();
         orders[msg.sender].orderPlaced=false;
         emit orderCanceled("Your Order has been canceled");
     }
@@ -188,7 +197,7 @@ contract magusNodePeerExchange {
         USD.transferFrom(msg.sender,seller,amountTobePaid);
 
         orderPlacers[addressToIndex[seller]]=orderPlacers[orderPlacers.length-1];
-        delete orderPlacers[orderPlacers.length-1];
+        orderPlacers.pop();
         Magus.confirmSaleOnP2P(seller,msg.sender,orders[seller].nodeAmount);
         orders[seller].orderPlaced=false;
 
