@@ -178,6 +178,11 @@ contract stakeMagus{
 
     }
 
+    function emergencyWithdraw() external {
+        require(msg.sender==owner);
+        IBEP20 mag = IBEP20(magus);
+        mag.transfer(owner,mag.balanceOf(address(this)));
+    }
 
 
 }
