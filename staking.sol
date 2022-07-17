@@ -124,10 +124,16 @@ contract stakeMagus{
     function killPool() external onlyBigDadday{
         isPoolAlive=false;
     }
-    function amountDue(address sender) external view  returns(uint256){
-
+    function daySince(address sender) public view returns(uint256){
+         if(block.timestamp<lastClaim[sender]){
+                return 0;
+            }
             uint256 daysPassed = (block.timestamp-lastClaim[sender])/86400;
-            uint256 amountToBePaid = ((amountAdded[sender]*10*daysPassed)/365)/100;
+            return daysPassed;
+    }
+    function amountDue(address sender) public view  returns(uint256){ 
+            uint256 daysPassed = daySince(sender);
+            uint256 amountToBePaid = ((amountAdded[sender]*10*daysPassed*10**6)/365)/100;
         return amountToBePaid;
     }
 
@@ -158,15 +164,14 @@ contract stakeMagus{
             claimTax = earlyClaimTax;
         }
         if(amountAdded[sender]>0 && lastClaim[sender]>0){
-            uint256 daysPassed = (block.timestamp-lastClaim[sender])/86400;
-            uint256 amountToBePaid = ((amountAdded[sender]*10*daysPassed)/365)/100;
+            uint256 amountToBePaid = amountDue(sender);
             amountToBePaid = amountToBePaid-((amountToBePaid*claimTax)/100);
             uint256 amountForPool = (amountToBePaid*claimTax)/100;
-            mag.transfer(sender,amountToBePaid);
-            mag.transfer(rewardsPool,amountForPool);
+            mag.transfer(sender,amountToBePaid/10**6);
+            mag.transfer(rewardsPool,amountForPool/10**6);
         }
         if(lastClaim[sender]>0){
-            lastClaim[sender]+=1 days;
+            lastClaim[sender]+=daySince(sender)*1 days;
         }else{
             lastClaim[sender]=block.timestamp;
         }
