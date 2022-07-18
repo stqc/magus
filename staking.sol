@@ -97,7 +97,7 @@ interface IBEP20 {
 contract stakeMagus{
 
     address public rewardsPool=0x3928a2798a0c857D286d657De9F7D286B08198Ae;
-    address public magus=0x494b36A18778cE24A5179925c2d43590DB4ebFd6;
+    address public magus=0x85025c61fF557C19Eb5eE5aF8FB7AB7CAc6253e0;
     address owner;
     uint256 public earlyClaimTax=30;
     uint256 public rewardsPercentage = 10;
