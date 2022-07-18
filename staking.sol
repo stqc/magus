@@ -97,7 +97,7 @@ interface IBEP20 {
 contract stakeMagus{
 
     address public rewardsPool=0x3928a2798a0c857D286d657De9F7D286B08198Ae;
-    address public magus=0xA57ca211cd6820bd3d930978271538d07e31A212;
+    address public magus=0x494b36A18778cE24A5179925c2d43590DB4ebFd6;
     address owner;
     uint256 public earlyClaimTax=30;
     uint256 public rewardsPercentage = 10;
@@ -125,7 +125,7 @@ contract stakeMagus{
         isPoolAlive=false;
     }
     function daySince(address sender) public view returns(uint256){
-         if(block.timestamp<lastClaim[sender]){
+         if(block.timestamp<lastClaim[sender] || lastClaim[sender]==0){
                 return 0;
             }
             uint256 daysPassed = (block.timestamp-lastClaim[sender])/86400;
