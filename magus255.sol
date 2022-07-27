@@ -16,6 +16,7 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
     string base="https://ipfs.io/ipfs/Qmdhd3w78Dcp9n9mLwdgALeD5EhhvMMcAeBBAjpw1ZvwCZ";
     mapping(address=>bool) public isWhitelisted;
     bool public whitelistTime=true;
+    uint256 len=255;
     uint256 [] items;
 
     constructor() ERC721("Magus255", "MAG255") {
@@ -54,20 +55,18 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
         }
     }
 
-    function mint(uint256 amount) external payable whenNotPaused whitelistEnabled{
+    function mint() external payable whenNotPaused whitelistEnabled{
         require(items.length>0,"The collection has been completely minted");
-        uint256 val = amount * price;
-        require(val == msg.value,"incorrect amount sent");
-        (bool success,) = own.call{value:val}("");
-        require(success,"transfer failed");
-        for(uint i =0; i<amount; i++ ){
+        uint256 val = price;
+        require(val == msg.value,"incorrect amount sent");       
             uint256 idToMint = chooseId();
             _safeMint(msg.sender,idToMint);
             string memory id = Strings.toString(items[idToMint]);
             _setTokenURI(idToMint,string.concat("/",id,".json"));
-            items[idToMint] = items[items.length-1];
+            items[idToMint] = items[len-1];
             items.pop();
-            }
+            len = items.length;
+            
     }
 
     function disableWhitelist() external onlyOwner{
@@ -80,8 +79,12 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
 
     receive() external  payable{}
 
+    function removeALLethers( )external onlyOwner payable{
+        own.call{value:address(this).balance}("");
+    }
+
     function chooseId() internal view returns(uint256){
-            return (block.timestamp**7+255)%items.length;
+            return (block.timestamp**2+255)%len;
     }
 
     function _baseURI() internal view virtual override returns (string memory) {
