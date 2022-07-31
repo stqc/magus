@@ -1,0 +1,27 @@
+{
+  "files": {
+    "main.css": "/static/css/main.b7e69932.chunk.css",
+    "main.js": "/static/js/main.814600a8.chunk.js",
+    "main.js.map": "/static/js/main.814600a8.chunk.js.map",
+    "runtime-main.js": "/static/js/runtime-main.a91484e0.js",
+    "runtime-main.js.map": "/static/js/runtime-main.a91484e0.js.map",
+    "static/js/2.aed2d85e.chunk.js": "/static/js/2.aed2d85e.chunk.js",
+    "static/js/2.aed2d85e.chunk.js.map": "/static/js/2.aed2d85e.chunk.js.map",
+    "static/js/3.49c9ca17.chunk.js": "/static/js/3.49c9ca17.chunk.js",
+    "static/js/3.49c9ca17.chunk.js.map": "/static/js/3.49c9ca17.chunk.js.map",
+    "index.html": "/index.html",
+    "static/css/main.b7e69932.chunk.css.map": "/static/css/main.b7e69932.chunk.css.map",
+    "static/js/2.aed2d85e.chunk.js.LICENSE.txt": "/static/js/2.aed2d85e.chunk.js.LICENSE.txt",
+    "static/media/fantom_zombie_logo_2_without_black_shadow-01.69d99452.png": "/static/media/fantom_zombie_logo_2_without_black_shadow-01.69d99452.png",
+    "static/media/im1.0aa10137.jpg": "/static/media/im1.0aa10137.jpg",
+    "static/media/im1.e39c2244.gif": "/static/media/im1.e39c2244.gif",
+    "static/media/Opening.css": "/static/media/im2.848a3ce5.jpg",
+    "static/media/logo.6ce24c58.svg": "/static/media/logo.6ce24c58.svg"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.a91484e0.js",
+    "static/js/2.aed2d85e.chunk.js",
+    "static/css/main.b7e69932.chunk.css",
+    "static/js/main.814600a8.chunk.js"
+  ]
+}
