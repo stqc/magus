@@ -1,5 +1,6 @@
+
+pragma solidity >=0.8.0;
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
 
 import "@openzeppelin/contracts@4.7.1/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts@4.7.1/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -12,7 +13,7 @@ import "@openzeppelin/contracts@4.7.1/utils/Strings.sol";
 contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, Pausable, Ownable {
     
     address public own;
-    uint256 public price = 0.01 ether;
+    uint256 public price = 550 ether;
     string base="https://ipfs.io/ipfs/Qmdhd3w78Dcp9n9mLwdgALeD5EhhvMMcAeBBAjpw1ZvwCZ";
     mapping(address=>bool) public isWhitelisted;
     bool public whitelistTime=true;
@@ -28,7 +29,7 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
 
     modifier whitelistEnabled{
         if(whitelistTime){
-            price = 0.005 ether;
+            price = 500 ether;
             require(isWhitelisted[msg.sender],"you are not whitelisted");
         }
         _;
@@ -60,10 +61,10 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
         uint256 val = price;
         require(val == msg.value,"incorrect amount sent");       
             uint256 idToMint = chooseId();
-            _safeMint(msg.sender,idToMint);
+            _safeMint(msg.sender,items[idToMint]);
             string memory id = Strings.toString(items[idToMint]);
-            _setTokenURI(idToMint,string.concat("/",id,".json"));
-            items[idToMint] = items[len-1];
+            _setTokenURI(items[idToMint],string.concat("/",id,".json"));
+            items[idToMint] = items[items.length-1];
             items.pop();
             len = items.length;
             
@@ -80,7 +81,8 @@ contract Magus255 is ERC721, ERC721Enumerable, ERC721URIStorage, ERC721Royalty, 
     receive() external  payable{}
 
     function removeALLethers( )external onlyOwner payable{
-        own.call{value:address(this).balance}("");
+       (bool success,) =own.call{value:address(this).balance}("");
+       require(success,"Transfer failed");
     }
 
     function chooseId() internal view returns(uint256){
